@@ -1,7 +1,7 @@
-name: "AD_CO_scRNAseq"
+name: AD_CO_scRNAseq
 output_dir: ../docs
 navbar:
-  title: "AD_CO_scRNAseq"
+  title: AD_CO_scRNAseq
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/petrsh/AD_CO_scRNAseq
 output:
   workflowr::wflow_html:
     toc: yes
