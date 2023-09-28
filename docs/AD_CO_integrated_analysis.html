@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="petrsh" />
+
+<meta name="date" content="2022-01-10" />
+
+<title>AD_CO_integrated_analysis</title>
+
+<script src="site_libs/header-attrs-2.9/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">AD_CO_scRNAseq</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/petrsh/AD_CO_scRNAseq">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">AD_CO_integrated_analysis</h1>
+<h4 class="author">petrsh</h4>
+<h4 class="date">2022-01-10</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-01-12
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>AD_CO_scRNAseq/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20220110code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20220110)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20220110code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20220110)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcompetrshADCOscRNAseqtree2f76cfb32c6bbb11d415824eac8d73da7afd93catargetblank2f76cfba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/petrsh/AD_CO_scRNAseq/tree/2f76cfb32c6bbb11d415824eac8d73da7afd93ca" target="_blank">2f76cfb</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcompetrshADCOscRNAseqtree2f76cfb32c6bbb11d415824eac8d73da7afd93catargetblank2f76cfba" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/petrsh/AD_CO_scRNAseq/tree/2f76cfb32c6bbb11d415824eac8d73da7afd93ca" target="_blank">2f76cfb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    analysis/figure/
+
+Untracked files:
+    Untracked:  analysis/AD_CO_integrated_analysis.Rmd
+    Untracked:  analysis/AD_analysis.Rmd
+    Untracked:  analysis/CO_analysis.Rmd
+    Untracked:  data/AD/
+    Untracked:  data/AD_CO_aggregated/
+    Untracked:  data/CO/
+    Untracked:  data/Kanton_2019/
+    Untracked:  data/selection_dyn_genes.txt
+    Untracked:  output/AD_clusters_res08.csv
+    Untracked:  output/AD_filtered_barcodes.csv
+    Untracked:  output/AD_sub_neuro_barcodes.csv
+    Untracked:  output/AD_sub_neuro_res08.csv
+    Untracked:  output/CO_clusters_res08.csv
+    Untracked:  output/CO_filtered_barcodes.csv
+    Untracked:  output/CO_sub_neuro.csv
+    Untracked:  output/CO_sub_neuro_res08.csv
+    Untracked:  output/COvsAD_DE_dyn_genes.csv
+    Untracked:  output/cond_spec_markers_cl0.csv
+    Untracked:  output/cond_spec_markers_cl1.csv
+    Untracked:  output/cond_spec_markers_cl2.csv
+    Untracked:  output/cond_spec_markers_cl3.csv
+    Untracked:  output/cond_spec_markers_cl4.csv
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="dependencies" class="section level2">
+<h2>Dependencies</h2>
+<pre class="r"><code>library(Seurat)
+library(SingleR)
+library(BiocParallel)
+library(simspec)
+library(scProportionTest)
+library(dplyr)
+library(slingshot)
+library(tradeSeq)
+library(pheatmap)
+library(ggplot2)
+library(ggthemes)
+library(here)
+
+# not loaded but required:
+#library(gridExtra)</code></pre>
+<div id="we-used-cellranger-aggr-to-aggregate-datasets-into-a-single-feature-barcode-matrix-and-subsample-reads-such-that-the-datasets-have-the-same-effective-sequencing-depth." class="section level3">
+<h3>We used ‘cellranger aggr’ to aggregate datasets into a single feature-barcode matrix and subsample reads such that the datasets have the same effective sequencing depth.</h3>
+<pre class="r"><code>D1D2_merged &lt;- Read10X(here(&quot;data&quot;,&quot;AD_CO_aggregated&quot;))
+Sat_D1D2_merged &lt;- CreateSeuratObject(D1D2_merged, min.cells = 3)
+Sat_D1D2_merged &lt;- PercentageFeatureSet(Sat_D1D2_merged, pattern = &quot;^MT-&quot;, col.name = &quot;percent.mt&quot;)
+Sat_D1D2_merged &lt;- PercentageFeatureSet(Sat_D1D2_merged, pattern = &quot;^RP[SL][[:digit:]]|^RPLP[[:digit:]]|^RPSA&quot;, col.name = &quot;percent.ribo&quot;)
+
+Sat_D1D2_merged$dataset &lt;- sub(&quot;.*-&quot;,&quot;D&quot;, colnames(Sat_D1D2_merged))
+
+AD_filtered_barcodes &lt;- read.csv(here(&quot;output&quot;, &quot;AD_filtered_barcodes.csv&quot;)) %&gt;% 
+  pull(x)
+CO_filtered_barcodes &lt;- read.csv(here(&quot;output&quot;, &quot;CO_filtered_barcodes.csv&quot;)) %&gt;% 
+  pull(x)          
+
+Sat_D1D2_merged &lt;- subset(Sat_D1D2_merged, cells = c(CO_filtered_barcodes, AD_filtered_barcodes))</code></pre>
+</div>
+<div id="subset-cells-in-the-datasets-such-that-the-datasets-contain-same-number-of-cells." class="section level3">
+<h3>Subset cells in the datasets such that the datasets contain same number of cells.</h3>
+<pre class="r"><code>Sat_D1D2_merged_D1 &lt;- subset(Sat_D1D2_merged, dataset == &quot;D1&quot;)
+Sat_D1D2_merged_D2 &lt;- subset(Sat_D1D2_merged, dataset == &quot;D2&quot;)
+
+set.seed(42)
+Sat_D1D2_merged_D2 &lt;- subset(Sat_D1D2_merged_D2, cells = sample(Cells(Sat_D1D2_merged_D2), length(Cells(Sat_D1D2_merged_D1))))
+Sat_D1D2_merged &lt;- subset(Sat_D1D2_merged, cells = c(Cells(Sat_D1D2_merged_D1),Cells(Sat_D1D2_merged_D2)))
+# Use regularized negative binomial regression to normalize counts
+Sat_D1D2_merged &lt;- SCTransform(Sat_D1D2_merged, verbose = FALSE)
+# Assign cell-cycle score
+Sat_D1D2_merged &lt;- CellCycleScoring(Sat_D1D2_merged, s.features = cc.genes.updated.2019$s.genes, g2m.features = cc.genes.updated.2019$g2m.genes,
+                                    set.ident = TRUE)
+# Regress out the difference between the G2M and S phase scores
+Sat_D1D2_merged$cc_difference &lt;- Sat_D1D2_merged$S.Score - Sat_D1D2_merged$G2M.Score
+Sat_D1D2_merged &lt;- SCTransform(Sat_D1D2_merged, assay = &#39;RNA&#39;, new.assay.name = &#39;SCT&#39;, vars.to.regress = &quot;cc_difference&quot;, verbose = FALSE)
+
+Sat_D1D2_merged &lt;- RunPCA(Sat_D1D2_merged, features = VariableFeatures(Sat_D1D2_merged))
+Sat_D1D2_merged &lt;- RunUMAP(Sat_D1D2_merged, dims = 1:15)
+DimPlot(Sat_D1D2_merged, group.by = &quot;Phase&quot;) +
+  DimPlot(Sat_D1D2_merged, group.by = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>## Add AD and CO cluster labels
+AD_clusters &lt;- read.csv(here(&quot;output&quot;, &quot;AD_clusters_res08.csv&quot;)) %&gt;% 
+  pull(x, X)
+names(AD_clusters) &lt;- sub(&quot;-1&quot;, &quot;-2&quot;, names(AD_clusters))
+AD_clusters &lt;- AD_clusters[names(AD_clusters) %in% AD_filtered_barcodes]
+
+
+CO_clusters &lt;- read.csv(here(&quot;output&quot;, &quot;CO_clusters_res08.csv&quot;)) %&gt;% 
+  pull(x, X)
+
+Sat_D1D2_merged$CO_clusters &lt;- CO_clusters
+Sat_D1D2_merged$AD_clusters &lt;- AD_clusters</code></pre>
+</div>
+<div id="umap-embedding-of-the-data-without-any-integration-method-revealed-segregation-of-cells-based-on-datasets.-we-decided-to-apply-the-cluster-similarity-spectrum-css-method-that-achieves-integration-by-representing-each-cell-by-its-transcriptomes-similarity-to-every-cell-cluster-in-each-sample." class="section level3">
+<h3>UMAP embedding of the data without any integration method revealed segregation of cells based on datasets. We decided to apply the cluster similarity spectrum (CSS) method that achieves integration by representing each cell by its transcriptome’s similarity to every cell cluster in each sample.</h3>
+<pre class="r"><code>Sat_D1D2_merged_batch_cor &lt;- cluster_sim_spectrum(object = Sat_D1D2_merged, label_tag = &quot;dataset&quot;,
+                                                  cluster_resolution = 0.8, verbose=FALSE)
+
+Sat_D1D2_merged_batch_cor &lt;- RunUMAP(Sat_D1D2_merged_batch_cor, reduction = &quot;css&quot;, dims = 1:ncol(Embeddings(Sat_D1D2_merged_batch_cor, &quot;css&quot;)))
+Sat_D1D2_merged_batch_cor &lt;- FindNeighbors(Sat_D1D2_merged_batch_cor, reduction = &quot;css&quot;, dims = 1:ncol(Embeddings(Sat_D1D2_merged_batch_cor, &quot;css&quot;)))
+Sat_D1D2_merged_batch_cor &lt;- FindClusters(Sat_D1D2_merged_batch_cor, resolution = c(0.1, 0.4, 0.8), verbose = FALSE)
+
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;SCT_snn_res.0.8&quot;, label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;SCT_snn_res.0.4&quot;, label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;SCT_snn_res.0.1&quot;, label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;dataset&quot;, label = T) </code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>autumn_palette &lt;- c(&quot;#751A33&quot;, &quot;#B34233&quot;, &quot;#D28F33&quot;, &quot;#D4B95E&quot;, &quot;#4EA2A2&quot;, &quot;#506432&quot;,
+                    &quot;#1A8693&quot;, &quot;#cbdfbd&quot;, &quot;#d4e09b&quot;, &quot;#f6f4d2&quot;, &quot;#f19c79&quot;, &quot;#a44a3f&quot;)
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;SCT_snn_res.0.4&quot;, label = F, cols = autumn_palette) +
+  theme_tufte() +
+  theme(axis.ticks = element_blank())</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="we-can-better-visualize-differences-between-ad-and-co-by-computing-the-imbalance-score-for-each-cell-based-on-the-condition-label-distribution-of-its-neighbors-compared-to-the-overall-distribution." class="section level3">
+<h3>We can better visualize differences between AD and CO by computing the imbalance score for each cell based on the condition label distribution of its neighbors compared to the overall distribution.</h3>
+<pre class="r"><code>imb_scores &lt;- condiments::imbalance_score(Object = Sat_D1D2_merged_batch_cor@reductions$umap@cell.embeddings,
+                                          conditions = Sat_D1D2_merged_batch_cor$dataset)
+
+df_imb &lt;- as.data.frame(Sat_D1D2_merged_batch_cor@reductions$umap@cell.embeddings)
+df_imb$scaled_imb &lt;- imb_scores$scaled_scores
+
+ggplot(df_imb, aes(x = UMAP_1, y = UMAP_2, col = scaled_imb)) +
+  geom_point() +
+  scale_color_viridis_c(option = &quot;C&quot;) +
+  labs(col = &quot;Imbalance score&quot;) +
+  ggthemes::theme_tufte(ticks = F) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank())</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="we-test-the-difference-between-the-proportion-of-cells-in-clusters-between-ad-and-co." class="section level3">
+<h3>We test the difference between the proportion of cells in clusters between AD and CO.</h3>
+<pre class="r"><code>test_scProportionTest &lt;- sc_utils(Sat_D1D2_merged_batch_cor)
+test_scProportionTest &lt;- permutation_test(test_scProportionTest, 
+                                   cluster_identity = &quot;SCT_snn_res.0.4&quot;, 
+                                   sample_1 = &quot;D1&quot;,
+                                   sample_2 = &quot;D2&quot;,
+                                   sample_identity = &quot;dataset&quot;)
+
+permutation_plot(test_scProportionTest)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="identification-of-specific-genes-for-adco" class="section level3">
+<h3>Identification of specific genes for AD/CO</h3>
+<pre class="r"><code>cond_spec_markers &lt;- list()
+for (i in levels(Sat_D1D2_merged_batch_cor$SCT_snn_res.0.1)) {
+  tmp &lt;- subset(Sat_D1D2_merged_batch_cor, SCT_snn_res.0.1 == i)
+  cond_spec_markers[[i]] &lt;- SoupX::quickMarkers(tmp@assays$RNA@counts, tmp$dataset, N = 50)
+}
+
+for (i in names(cond_spec_markers)){
+  file_name &lt;- paste(&quot;cond_spec_markers_cl&quot;, i, &quot;.csv&quot;, sep = &quot;&quot;)
+  write.csv(cond_spec_markers[[i]][,-c(1,5,7,8,9)],here(&quot;output&quot;, file_name), 
+            row.names = TRUE, quote = FALSE)
+  }
+
+SCE_D1D2_merged_batch_cor &lt;- as.SingleCellExperiment(Sat_D1D2_merged_batch_cor)
+
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[[&quot;0&quot;]] %&gt;%
+              arrange(qval) %&gt;%
+              pull(gene) %&gt;%
+              head(),
+              x = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[[&quot;1&quot;]] %&gt;%
+              arrange(qval) %&gt;%
+              pull(gene) %&gt;%
+              head(),
+              x = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[[&quot;2&quot;]] %&gt;%
+              arrange(qval) %&gt;%
+              pull(gene) %&gt;%
+              head(),
+              x = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[[&quot;3&quot;]] %&gt;%
+              arrange(qval) %&gt;%
+              pull(gene) %&gt;%
+              head(),
+              x = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[[&quot;4&quot;]] %&gt;%
+              arrange(qval) %&gt;%
+              pull(gene) %&gt;%
+              head(),
+              x = &quot;dataset&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>genes_to_plot &lt;- c(&quot;RAX&quot;, &quot;CRX&quot;, &quot;VSX2&quot;, &quot;SIX6&quot;)
+for (i in genes_to_plot){
+  g &lt;- Nebulosa::plot_density(Sat_D1D2_merged_batch_cor, features = i, reduction = &quot;umap&quot;) +
+        theme_tufte() +
+        theme(legend.position=&quot;none&quot;, axis.ticks = element_blank())
+  print(g)
+  }</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-7-9.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="we-compare-our-datasets-with-published-data-kanton-et-al-2019-using-the-singler-package." class="section level3">
+<h3>We compare our datasets with published data (Kanton et al, 2019) using the SingleR package.</h3>
+<pre class="r"><code>orgFull_huma &lt;- readRDS(here(&quot;data&quot;, &quot;Kanton_2019&quot;, &quot;timecourse_human_pseudocells_consensusGenome.rds&quot;))
+DimPlot(orgFull_huma, reduction = &quot;spring&quot;, group.by = &quot;stage_group&quot;) </code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="the-cells-in-our-datasets-are-from-2-month-old-organoids-therefore-we-expect-the-most-cells-to-be-classified-as-organoid-2m-or-younger" class="section level3">
+<h3>The cells in our datasets are from 2-month old organoids, therefore, we expect the most cells to be classified as “Organoid-2M” or younger</h3>
+<pre class="r"><code># Extract log-normalized counts and subset the matrix to genes detected in our dataset
+orgFull_huma_logCounts &lt;- orgFull_huma@assays$RNA@data[rownames(orgFull_huma@assays$RNA@data) %in% rownames(Sat_D1D2_merged_batch_cor@assays$RNA@counts),]
+
+# Build a reference
+orgFull_human_stage_ref &lt;- trainSingleR(orgFull_huma_logCounts, 
+                                labels = orgFull_huma$stage_group, 
+                                BPPARAM = MulticoreParam(), 
+                                de.n = 300,
+                                aggr.ref = TRUE)
+# Classify cells in our dataset
+D1D2_orgFull_human_stage_pred &lt;- classifySingleR(Sat_D1D2_merged_batch_cor@assays$RNA@counts, orgFull_human_stage_ref, BPPARAM = MulticoreParam())
+
+#table(D1D2_orgFull_human_stage_pred$pruned.labels)
+Sat_D1D2_merged_batch_cor$orgFull_human_stage_pred &lt;- as.factor(D1D2_orgFull_human_stage_pred$pruned.labels)
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = &quot;orgFull_human_stage_pred&quot;, label=F)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-9-1.png" width="1536" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Sat_D1D2_merged_batch_cor_D1 &lt;- subset(Sat_D1D2_merged_batch_cor, dataset == &quot;D1&quot;)
+Sat_D1D2_merged_batch_cor_D2 &lt;- subset(Sat_D1D2_merged_batch_cor, dataset == &quot;D2&quot;)
+
+DimPlot(Sat_D1D2_merged_batch_cor_D1, group.by = &quot;orgFull_human_stage_pred&quot;, split.by = &quot;orgFull_human_stage_pred&quot;, label=F) &amp;
+  theme_tufte() &amp;
+  theme(axis.ticks = element_blank())</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-9-2.png" width="1536" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DimPlot(Sat_D1D2_merged_batch_cor_D2, group.by = &quot;orgFull_human_stage_pred&quot;, split.by = &quot;orgFull_human_stage_pred&quot;, label=F) &amp;
+  theme_tufte() &amp;
+  theme(axis.ticks = element_blank())</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-9-3.png" width="1536" style="display: block; margin: auto;" /></p>
+</div>
+<div id="trajectory-inference-across-conditions" class="section level3">
+<h3>Trajectory inference across conditions</h3>
+<pre class="r"><code>DimPlot(Sat_D1D2_merged_batch_cor, label = F, group.by = &quot;SCT_snn_res.0.1&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>clust &lt;-  subset(Sat_D1D2_merged_batch_cor, SCT_snn_res.0.1 %in% c(0,1))
+# remove AD cluster 6 and CO cluster 8
+clust &lt;-  subset(clust, AD_clusters %in% 6, invert=T)
+clust &lt;-  subset(clust, CO_clusters %in% 8, invert=T)
+#
+clust$TTR_on &lt;- clust@assays$RNA@counts[&quot;TTR&quot;,] &gt; 2
+clust &lt;- subset(clust, TTR_on == FALSE)
+
+rd &lt;- clust@reductions$umap@cell.embeddings
+clust &lt;- as.character(clust$SCT_snn_res.0.1)
+
+sds &lt;- slingshot(rd, clust, start.clus=&quot;1&quot;,end.clus =&quot;0&quot;, stretch=0, extend=&quot;n&quot;)
+
+#SlingshotDataSet(sds)
+#plot(rd[,1], rd[,2])
+#lines(SlingshotDataSet(sds))
+
+psts &lt;- slingPseudotime(sds) 
+
+df_psts &lt;- as.data.frame(rd)
+df_psts$psts &lt;- psts
+
+ggplot(df_psts, aes(x = UMAP_1, y = UMAP_2, col = psts)) +
+  geom_point() +
+  ggthemes::theme_tufte(ticks = F) +
+  scale_color_viridis_c() +
+  labs(col=&quot;pseudotime&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Sat_D1D2_merged_batch_cor_psts &lt;- subset(Sat_D1D2_merged_batch_cor, cells = rownames(rd))
+df_psts$condition &lt;- Sat_D1D2_merged_batch_cor_psts$dataset
+df_psts$condition[df_psts$condition == &quot;D1&quot;] &lt;- &quot;CO&quot;
+df_psts$condition[df_psts$condition == &quot;D2&quot;] &lt;- &quot;AD&quot;
+
+ggplot(df_psts, aes(x = psts, fill = condition)) +
+  geom_density(alpha = .5) +
+  scale_fill_brewer(type = &quot;qual&quot;) +
+  theme(legend.position = &quot;bottom&quot;) +
+  ggthemes::theme_tufte(ticks = F) +
+  labs(x=&quot;pseudotime&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="trajectory-inference-across-conditions-differential-expression-between-conditions-along-pseudotime" class="section level3">
+<h3>Trajectory inference across conditions: differential expression between conditions along pseudotime</h3>
+</div>
+<div id="for-both-datasets-we-will-estimate-a-smooth-average-gene-expression-profile-along-pseudotime-using-a-negative-binomial-generalized-additive-model-nb-gam.-then-we-will-identify-genes-differentially-expressed-between-ad-and-co-within-a-trajectory." class="section level3">
+<h3>For both datasets we will estimate a smooth average gene expression profile along pseudotime using a negative binomial generalized additive model (NB-GAM). Then we will identify genes differentially expressed between AD and CO within a trajectory.</h3>
+<pre class="r"><code>counts_D1D2_merged &lt;- as.matrix(Sat_D1D2_merged_batch_cor@assays$RNA@counts[VariableFeatures(Sat_D1D2_merged_batch_cor),rownames(df_psts)])
+
+df_psts$condition &lt;- as.factor(df_psts$condition)
+
+# comp demanding, don&#39;t run again when generating the report
+BPPARAM &lt;- BiocParallel::bpparam()
+BPPARAM$workers &lt;- 30 # use n cores
+#set.seed(42)
+#aicK &lt;- evaluateK(counts = counts_D1D2_merged, sds = sds, conditions = df_psts$condition,
+#                     parallel = TRUE, BPPARAM = BPPARAM)
+
+set.seed(42)
+sceGAM &lt;- fitGAM(counts = counts_D1D2_merged, sds = sds, conditions = df_psts$condition,
+                  nknots = 7, parallel=TRUE, BPPARAM = BPPARAM, verbose = FALSE)
+
+
+# Identify DE genes between AD and CO
+cond_res &lt;- conditionTest(sceGAM, l2fc = log2(2))
+cond_res$padj &lt;- p.adjust(cond_res$pvalue, &quot;fdr&quot;)
+sum(cond_res$padj &lt;= 0.01, na.rm = TRUE)</code></pre>
+<pre><code>[1] 141</code></pre>
+<pre class="r"><code># export
+cond_res %&gt;%
+  filter(padj &lt;= 0.1) %&gt;%
+  arrange(padj) %&gt;%
+  write.csv(here(&quot;output&quot;,&quot;COvsAD_DE_dyn_genes.csv&quot;))
+
+condition_genes &lt;- cond_res %&gt;%
+                    filter(padj &lt;= 0.01) %&gt;%
+                    arrange(padj) %&gt;%
+                    rownames()
+### based on mean smoother
+yhat_smooth &lt;- predictSmooth(sceGAM, gene = condition_genes, nPoints = 50, tidy = FALSE)
+yhat_smooth_scaled &lt;- t(scale(t(yhat_smooth)))
+
+heat_smooth_CO &lt;- pheatmap(yhat_smooth_scaled[,51:100],
+  cluster_cols = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;CO&quot;, legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+matching_heatmap_AD &lt;- pheatmap(yhat_smooth_scaled[heat_smooth_CO$tree_row$order, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;AD&quot;,
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+#heat_smooth_CO$tree_row$labels[heat_smooth_CO$tree_row$order]</code></pre>
+</div>
+<div id="heatmaps-of-de-genes-between-ad-and-co-within-a-trajectory" class="section level3">
+<h3>Heatmaps of DE genes between AD and CO within a trajectory</h3>
+<pre class="r"><code>gridExtra::grid.arrange(heat_smooth_CO[[4]], matching_heatmap_AD[[4]], ncol = 2)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dyn_genes &lt;- read.delim(here(&quot;data&quot;,&quot;selection_dyn_genes.txt&quot;))
+
+heat_smooth_CO &lt;- pheatmap(yhat_smooth_scaled[dyn_genes$WT,51:100],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;CO&quot;, legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+matching_heatmap_AD &lt;- pheatmap(yhat_smooth_scaled[dyn_genes$WT, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;AD&quot;,
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+gridExtra::grid.arrange(heat_smooth_CO[[4]], matching_heatmap_AD[[4]], ncol = 2)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>heat_smooth_AD &lt;- pheatmap(yhat_smooth_scaled[dyn_genes$AD, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;AD&quot;,
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+matching_heatmap_CO &lt;- pheatmap(yhat_smooth_scaled[dyn_genes$AD,51:100],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = &quot;CO&quot;, legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+gridExtra::grid.arrange(heat_smooth_AD[[4]], matching_heatmap_CO[[4]], ncol = 2)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>genes_to_plot &lt;- c(&quot;HES5&quot;, &quot;HES4&quot;, &quot;HES1&quot;, &quot;NOTCH1&quot;)
+
+Sat_D1D2_merged_batch_cor$dataset_SCT_snn_res.0.4 &lt;- paste(Sat_D1D2_merged_batch_cor$SCT_snn_res.0.4, Sat_D1D2_merged_batch_cor$dataset, sep = &quot;_&quot;)
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = &quot;dataset_SCT_snn_res.0.4&quot;) +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = &quot;dataset_SCT_snn_res.0.4&quot;) +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme( axis.text.x = element_text(angle = 90),
+        legend.position=&quot;none&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = &quot;dataset_SCT_snn_res.0.4&quot;) +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme( axis.text.x = element_text(angle = 90),
+        legend.key.size = unit(0.2, &#39;cm&#39;), #change legend key size
+        legend.key.height = unit(0.2, &#39;cm&#39;), #change legend key height
+        legend.key.width = unit(0.2, &#39;cm&#39;), #change legend key width
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8))</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-15-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = &quot;dataset&quot;) +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position=&quot;none&quot;)</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-15-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = &quot;dataset&quot;) +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90),
+         legend.key.size = unit(0.2, &#39;cm&#39;), #change legend key size
+        legend.key.height = unit(0.2, &#39;cm&#39;), #change legend key height
+        legend.key.width = unit(0.2, &#39;cm&#39;), #change legend key width
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8))</code></pre>
+<p><img src="figure/AD_CO_integrated_analysis.Rmd/unnamed-chunk-15-5.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.1 (2021-08-10)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 20.04.3 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.9.0
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.9.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] presto_1.0.0                data.table_1.14.0          
+ [3] Rcpp_1.0.6                  here_1.0.1                 
+ [5] ggthemes_4.2.4              ggplot2_3.3.5              
+ [7] pheatmap_1.0.12             tradeSeq_1.6.0             
+ [9] slingshot_2.0.0             TrajectoryUtils_1.0.0      
+[11] SingleCellExperiment_1.14.1 princurve_2.1.6            
+[13] dplyr_1.0.7                 scProportionTest_0.0.0.9000
+[15] simspec_0.0.0.9000          BiocParallel_1.26.1        
+[17] SingleR_1.6.1               SummarizedExperiment_1.22.0
+[19] Biobase_2.52.0              GenomicRanges_1.44.0       
+[21] GenomeInfoDb_1.28.1         IRanges_2.26.0             
+[23] S4Vectors_0.30.0            BiocGenerics_0.38.0        
+[25] MatrixGenerics_1.4.0        matrixStats_0.59.0         
+[27] SeuratObject_4.0.2          Seurat_4.0.3.9011          
+[29] workflowr_1.6.2            
+
+loaded via a namespace (and not attached):
+  [1] scattermore_0.7           ModelMetrics_1.2.2.2     
+  [3] Ecume_0.9.1               tidyr_1.1.3              
+  [5] knitr_1.33                irlba_2.3.3              
+  [7] DelayedArray_0.18.0       rpart_4.1-15             
+  [9] RCurl_1.98-1.3            generics_0.1.0           
+ [11] ScaledMatrix_1.0.0        cowplot_1.1.1            
+ [13] RANN_2.6.1                VGAM_1.1-5               
+ [15] combinat_0.0-8            proxy_0.4-26             
+ [17] future_1.21.0             spatstat.data_2.1-0      
+ [19] lubridate_1.7.10          httpuv_1.6.1             
+ [21] assertthat_0.2.1          viridis_0.6.1            
+ [23] gower_0.2.2               xfun_0.24                
+ [25] jquerylib_0.1.4           evaluate_0.14            
+ [27] promises_1.2.0.1          fansi_0.5.0              
+ [29] igraph_1.2.6              DBI_1.1.1                
+ [31] htmlwidgets_1.5.3         sparsesvd_0.2            
+ [33] spatstat.geom_2.2-2       purrr_0.3.4              
+ [35] ellipsis_0.3.2            ks_1.13.2                
+ [37] RSpectra_0.16-0           DDRTree_0.1.5            
+ [39] deldir_0.2-10             sparseMatrixStats_1.4.0  
+ [41] vctrs_0.3.8               ROCR_1.0-11              
+ [43] abind_1.4-5               caret_6.0-88             
+ [45] withr_2.4.2               sctransform_0.3.2        
+ [47] mclust_5.4.7              goftest_1.2-2            
+ [49] cluster_2.1.2             lazyeval_0.2.2           
+ [51] crayon_1.4.1              edgeR_3.34.0             
+ [53] recipes_0.1.16            pkgconfig_2.0.3          
+ [55] slam_0.1-48               labeling_0.4.2           
+ [57] vipor_0.4.5               nlme_3.1-153             
+ [59] transport_0.12-2          nnet_7.3-16              
+ [61] rlang_0.4.11              globals_0.14.0           
+ [63] lifecycle_1.0.0           miniUI_0.1.1.1           
+ [65] rsvd_1.0.5                rprojroot_2.0.2          
+ [67] polyclip_1.10-0           lmtest_0.9-38            
+ [69] Nebulosa_1.2.0            Matrix_1.4-0             
+ [71] zoo_1.8-9                 beeswarm_0.4.0           
+ [73] ggridges_0.5.3            png_0.1-7                
+ [75] viridisLite_0.4.0         bitops_1.0-7             
+ [77] KernSmooth_2.23-20        pROC_1.17.0.1            
+ [79] DelayedMatrixStats_1.14.0 stringr_1.4.0            
+ [81] parallelly_1.26.1         beachmat_2.8.0           
+ [83] scales_1.1.1              magrittr_2.0.1           
+ [85] plyr_1.8.6                ica_1.0-2                
+ [87] zlibbioc_1.38.0           compiler_4.1.1           
+ [89] HSMMSingleCell_1.12.0     RColorBrewer_1.1-2       
+ [91] fitdistrplus_1.1-5        XVector_0.32.0           
+ [93] listenv_0.8.0             patchwork_1.1.1          
+ [95] pbapply_1.4-3             MASS_7.3-54              
+ [97] mgcv_1.8-38               tidyselect_1.1.1         
+ [99] stringi_1.6.2             forcats_0.5.1            
+[101] highr_0.9                 densityClust_0.3         
+[103] yaml_2.2.1                BiocSingular_1.8.1       
+[105] locfit_1.5-9.4            ggrepel_0.9.1            
+[107] grid_4.1.1                sass_0.4.0               
+[109] spatstat.linnet_2.3-0     tools_4.1.1              
+[111] future.apply_1.7.0        monocle_2.20.0           
+[113] foreach_1.5.1             git2r_0.28.0             
+[115] condiments_1.0.0          gridExtra_2.3            
+[117] prodlim_2019.11.13        farver_2.1.0             
+[119] Rtsne_0.15                digest_0.6.27            
+[121] pracma_2.3.3              FNN_1.1.3                
+[123] shiny_1.6.0               lava_1.6.9               
+[125] qlcMatrix_0.9.7           scuttle_1.2.0            
+[127] later_1.2.0               RcppAnnoy_0.0.18         
+[129] httr_1.4.2                kernlab_0.9-29           
+[131] SoupX_1.5.2               colorspace_2.0-2         
+[133] fs_1.5.0                  tensor_1.5               
+[135] reticulate_1.20           splines_4.1.1            
+[137] uwot_0.1.10               spatstat.utils_2.2-0     
+[139] scater_1.20.1             plotly_4.9.4.1           
+[141] xtable_1.8-4              jsonlite_1.7.2           
+[143] spatstat_2.2-0            timeDate_3043.102        
+[145] ipred_0.9-11              R6_2.5.0                 
+[147] pillar_1.6.1              htmltools_0.5.1.1        
+[149] mime_0.11                 glue_1.4.2               
+[151] fastmap_1.1.0             BiocNeighbors_1.10.0     
+[153] class_7.3-19              codetools_0.2-18         
+[155] mvtnorm_1.1-2             utf8_1.2.1               
+[157] lattice_0.20-45           bslib_0.2.5.1            
+[159] spatstat.sparse_2.0-0     tibble_3.1.2             
+[161] ggbeeswarm_0.6.0          leiden_0.3.8             
+[163] survival_3.2-13           limma_3.48.1             
+[165] rmarkdown_2.9             docopt_0.7.1             
+[167] fastICA_1.2-2             munsell_0.5.0            
+[169] e1071_1.7-7               GenomeInfoDbData_1.2.6   
+[171] iterators_1.0.13          reshape2_1.4.4           
+[173] gtable_0.3.0              spatstat.core_2.3-0      </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

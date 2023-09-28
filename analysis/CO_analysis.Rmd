@@ -1,0 +1,247 @@
+---
+title: "CO_analysis"
+author: "petrsh"
+date: "2022-01-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Dependencies
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+library(Seurat)
+library(dplyr)
+library(here)
+library(ggplot2)
+library(ggthemes)
+library(SeuratDisk)
+
+# not loaded but required:
+# scater - function plotExpression
+# SoupX - function quickMarkers
+# Nebulosa - function plot_density
+```
+
+## Importing CellRanger output and cell-level quality control
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+D1 <- Read10X(here("data","CO"))
+Sat_D1 <- CreateSeuratObject(D1, min.cells = 3)
+Sat_D1 <- PercentageFeatureSet(Sat_D1, pattern = "^MT-", col.name = "percent.mt")
+Sat_D1 <- PercentageFeatureSet(Sat_D1, pattern = "^RP[SL][[:digit:]]|^RPLP[[:digit:]]|^RPSA", col.name = "percent.ribo")
+
+Idents(Sat_D1) <- rep("CO", length(Sat_D1$orig.ident))
+VlnPlot(Sat_D1, c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, cols = "#4EA2A2") &
+  theme_tufte() &
+  theme(legend.position="none")
+  
+
+summary(Sat_D1$nFeature_RNA)
+summary(Sat_D1$nCount_RNA)
+summary(Sat_D1$percent.mt)
+summary(Sat_D1$percent.ribo)
+
+plot1 <- FeatureScatter(Sat_D1, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(Sat_D1, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+
+Sat_D1 <- subset(Sat_D1, subset = nFeature_RNA > 1000 & nFeature_RNA < 7000 & percent.mt < 10)
+```
+
+## Normalization
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1 <- SCTransform(Sat_D1, verbose = FALSE)
+```
+
+## Cell-cycle scoring and dimension reduction
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1 <- CellCycleScoring(Sat_D1, s.features = cc.genes.updated.2019$s.genes, 
+                           g2m.features = cc.genes.updated.2019$g2m.genes, set.ident = TRUE)
+Sat_D1 <- RunPCA(Sat_D1, features = VariableFeatures(Sat_D1))
+Sat_D1 <- RunUMAP(Sat_D1, dims = 1:15)
+DimPlot(Sat_D1, group.by = "Phase") +
+  theme_tufte()
+```
+
+## Clustering
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+set.seed(42)
+Sat_D1 <- FindNeighbors(Sat_D1, dims=1:15, verbose = FALSE)
+Sat_D1 <- FindClusters(Sat_D1, resolution = 0.8, verbose = FALSE)
+
+autumn_palette <- c("#751A33", "#B34233", "#D28F33", "#D4B95E", "#4EA2A2", "#506432",
+                    "#1A8693", "#cbdfbd", "#d4e09b", "#f6f4d2", "#f19c79", "#a44a3f")
+
+DimPlot(Sat_D1, label = T, group.by = "SCT_snn_res.0.8", cols = autumn_palette) +
+  theme_tufte()
+```
+
+## Cluster-level quality control
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+VlnPlot(Sat_D1, c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, cols = autumn_palette) &
+  theme_tufte() &
+  theme(legend.position="none")
+```
+
+### We can see that the cluster 5 has suspiciously low percentage of expressed mitochondrial genes and low number of detected genes. We will explore the markers of this cluster before proceeding with the further analyses.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+FindMarkers(Sat_D1, ident.1 = "5", logfc.threshold = 0.5, features = VariableFeatures(Sat_D1), verbose = FALSE) %>%
+  head(n=20)
+```
+
+### Among top upregulated genes we can find the genes that are involved in the pro-apoptotic signaling. Given the low expression of mitochondrial genes and low number of detected genes, we think that these are damaged cells without cytoplasmatic membrane and therefore we will remove this cluster and redo the preprocessing.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1_sub <- subset(Sat_D1, SCT_snn_res.0.8 == 5, invert=T)
+Sat_D1_sub <- SCTransform(Sat_D1_sub, assay = 'RNA', new.assay.name = 'SCT', verbose = FALSE)
+Sat_D1_sub <- RunPCA(Sat_D1_sub, features = VariableFeatures(Sat_D1_sub))
+Sat_D1_sub <- RunUMAP(Sat_D1_sub, dims = 1:15)
+
+DimPlot(Sat_D1_sub, label = T, group.by = "Phase") +
+  theme_tufte()
+
+set.seed(42)
+Sat_D1_sub <- FindNeighbors(Sat_D1_sub, dims=1:15, verbose = FALSE)
+Sat_D1_sub <- FindClusters(Sat_D1_sub, resolution = 0.8, verbose = FALSE)
+
+DimPlot(Sat_D1_sub, label = T, group.by = "SCT_snn_res.0.8", cols = autumn_palette) +
+  theme_tufte()
+
+VlnPlot(Sat_D1_sub, c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), cols = autumn_palette ,ncol = 2) & 
+  theme_tufte() &
+  theme(legend.position="none")
+
+# save cell barcodes to subset the aggregated dataset
+write.csv(colnames(Sat_D1_sub), here("output", "CO_filtered_barcodes.csv"),
+          row.names = FALSE)
+# save clusters
+write.csv(Sat_D1_sub$SCT_snn_res.0.8, here("output", "CO_clusters_res08.csv"),
+          row.names = TRUE)
+```
+
+## Regress out the difference between S and G2M score.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1_sub$cc_difference <- Sat_D1_sub$S.Score - Sat_D1_sub$G2M.Score
+Sat_D1_sub <- SCTransform(Sat_D1_sub, assay = 'RNA', new.assay.name = 'SCT', vars.to.regress = "cc_difference", verbose = FALSE)
+
+Sat_D1_sub <- RunPCA(Sat_D1_sub, features = VariableFeatures(Sat_D1_sub))
+Sat_D1_sub <- RunUMAP(Sat_D1_sub, dims = 1:15)
+
+DimPlot(Sat_D1_sub, group.by = "Phase") +
+  theme_tufte()
+
+set.seed(42)
+Sat_D1_sub <- FindNeighbors(Sat_D1_sub, dims=1:15, verbose = FALSE)
+Sat_D1_sub <- FindClusters(Sat_D1_sub, resolution = 0.8, verbose = FALSE)
+
+Sat_D1_sub$annot <- as.character(Sat_D1_sub$SCT_snn_res.0.8)
+
+DimPlot(Sat_D1_sub, label = F, group.by = "SCT_snn_res.0.8", cols = autumn_palette) +
+  theme_tufte()
+
+VlnPlot(Sat_D1_sub, c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), cols = autumn_palette ,ncol = 2) & 
+  theme_tufte() &
+  theme(legend.position="none")
+
+# save Sat_D1_sub for SingleR classification
+#saveRDS(Sat_D1_sub, here("output", "Sat_D1_sub.rds"))
+```
+
+## Identification of clusters specific genes using tf-idf (term frequency–inverse document frequency)
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+CO_markers <- SoupX::quickMarkers(Sat_D1_sub@assays$RNA@counts, Sat_D1_sub$SCT_snn_res.0.8, N = 6)
+SCE_D1_sub <- as.SingleCellExperiment(Sat_D1_sub)
+
+
+scater::plotExpression(SCE_D1_sub, features = unique(CO_markers$gene)[1:10], x = "SCT_snn_res.0.8", colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+scater::plotExpression(SCE_D1_sub, features = unique(CO_markers$gene)[11:20], x = "SCT_snn_res.0.8", colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+scater::plotExpression(SCE_D1_sub, features = unique(CO_markers$gene)[21:30], x = "SCT_snn_res.0.8",colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+scater::plotExpression(SCE_D1_sub, features = unique(CO_markers$gene)[31:33], x = "SCT_snn_res.0.8",colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+
+```
+
+## Plot genes selected from the literature
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+genes_to_plot <- c("MKI67", "SOX2", "SOX1", "PAX6", "NES", "DCX", "TUBB3", "MAP2", 
+                  "MAPT", "OLIG2", "PLP1", "S100B", "TMEM119", "RAX", "SIX3",
+                  "GAD2","ASCL1", "NEUROD1", "NEUROD4", "NEUROG1", "EOMES", "APOE")
+# not expressed in this dataset: "LY6H","PDGFR1", "NEUROG4"
+
+for (i in genes_to_plot){
+  g <- Nebulosa::plot_density(Sat_D1_sub, features = i) +
+        theme_tufte() +
+        theme(legend.position="right", axis.ticks = element_blank())
+  print(g)
+  }
+
+```
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+genes_to_plot <- c("HES1", "HES4", "HES5", "NOTCH1")
+
+for (i in genes_to_plot){
+  g <- Nebulosa::plot_density(Sat_D1_sub, features = i) +
+        theme_tufte() +
+        theme(legend.position="right", axis.ticks = element_blank())
+  print(g)
+  }
+```
+
+## Subset non-proliferating NSC, neurons and radial glia for CellRank analysis
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+#saveRDS(Sat_D1_sub, here("output", "Sat_D1_sub.rds"))
+
+Sat_D1_sub_neuro <- subset(Sat_D1_sub, SCT_snn_res.0.8 %in% c(0,4,5,9,6,10), invert = TRUE)
+#
+tmp_umap <- Sat_D1_sub_neuro@reductions$umap@cell.embeddings
+tmp_umap <- tmp_umap[tmp_umap[,1] < 0,]
+Sat_D1_sub_neuro <- subset(Sat_D1_sub_neuro, cells = rownames(tmp_umap))
+
+set.seed(42)
+Sat_D1_sub_neuro <- FindNeighbors(Sat_D1_sub_neuro, dims=1:15, verbose = FALSE)
+Sat_D1_sub_neuro <- FindClusters(Sat_D1_sub_neuro, resolution = 0.8, verbose = FALSE)
+DimPlot(Sat_D1_sub_neuro, label = F, group.by = "SCT_snn_res.0.8", cols = autumn_palette) +
+  theme_tufte()
+
+VlnPlot(Sat_D1_sub_neuro, c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 2, cols = autumn_palette) &
+  theme_tufte() &
+  theme(legend.position="none")
+
+# save cell barcodes
+write.csv(colnames(Sat_D1_sub_neuro), here("output", "CO_sub_neuro.csv"),
+          row.names = FALSE)
+# save clusters
+write.csv(Sat_D1_sub_neuro$SCT_snn_res.0.8, here("output", "CO_sub_neuro_res08.csv"),
+          row.names = TRUE)
+
+# convert to h5ad for CellRank
+# Sat_D1_sub_neuro <- RenameCells(Sat_D1_sub_neuro, new.names = paste("D1_", sub("-1", "", colnames(Sat_D1_sub_neuro)), sep=""))
+# SaveH5Seurat(Sat_D1_sub_neuro, filename = here("output","Sat_D1_sub.h5Seurat"))
+# Convert(here("output","Sat_D1_sub.h5Seurat"), dest="h5ad")
+```
+
+## Identification of clusters specific genes using tf-idf (term frequency–inverse document frequency)
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+CO_sub_markers <- SoupX::quickMarkers(Sat_D1_sub_neuro@assays$RNA@counts, Sat_D1_sub_neuro$SCT_snn_res.0.8, N = 6)
+
+SCE_D1_sub_neuro <- as.SingleCellExperiment(Sat_D1_sub_neuro)
+scater::plotExpression(SCE_D1_sub_neuro, features = unique(CO_sub_markers$gene)[1:10], x = "SCT_snn_res.0.8", colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+scater::plotExpression(SCE_D1_sub_neuro, features = unique(CO_sub_markers$gene)[11:20], x = "SCT_snn_res.0.8", colour_by = "SCT_snn_res.0.8") + 
+  scale_color_manual(values = autumn_palette)
+```

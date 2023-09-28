@@ -1,0 +1,441 @@
+---
+title: "AD_CO_integrated_analysis"
+author: "petrsh"
+date: "2022-01-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Dependencies
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+library(Seurat)
+library(SingleR)
+library(BiocParallel)
+library(simspec)
+library(scProportionTest)
+library(dplyr)
+library(slingshot)
+library(tradeSeq)
+library(pheatmap)
+library(ggplot2)
+library(ggthemes)
+library(here)
+
+# not loaded but required:
+#library(gridExtra)
+
+```
+
+
+### We used 'cellranger aggr' to aggregate datasets into a single feature-barcode matrix and subsample reads such that the datasets have the same effective sequencing depth.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+D1D2_merged <- Read10X(here("data","AD_CO_aggregated"))
+Sat_D1D2_merged <- CreateSeuratObject(D1D2_merged, min.cells = 3)
+Sat_D1D2_merged <- PercentageFeatureSet(Sat_D1D2_merged, pattern = "^MT-", col.name = "percent.mt")
+Sat_D1D2_merged <- PercentageFeatureSet(Sat_D1D2_merged, pattern = "^RP[SL][[:digit:]]|^RPLP[[:digit:]]|^RPSA", col.name = "percent.ribo")
+
+Sat_D1D2_merged$dataset <- sub(".*-","D", colnames(Sat_D1D2_merged))
+
+AD_filtered_barcodes <- read.csv(here("output", "AD_filtered_barcodes.csv")) %>% 
+  pull(x)
+CO_filtered_barcodes <- read.csv(here("output", "CO_filtered_barcodes.csv")) %>% 
+  pull(x)          
+
+Sat_D1D2_merged <- subset(Sat_D1D2_merged, cells = c(CO_filtered_barcodes, AD_filtered_barcodes))
+
+```
+
+
+### Subset cells in the datasets such that the datasets contain same number of cells.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1D2_merged_D1 <- subset(Sat_D1D2_merged, dataset == "D1")
+Sat_D1D2_merged_D2 <- subset(Sat_D1D2_merged, dataset == "D2")
+
+set.seed(42)
+Sat_D1D2_merged_D2 <- subset(Sat_D1D2_merged_D2, cells = sample(Cells(Sat_D1D2_merged_D2), length(Cells(Sat_D1D2_merged_D1))))
+Sat_D1D2_merged <- subset(Sat_D1D2_merged, cells = c(Cells(Sat_D1D2_merged_D1),Cells(Sat_D1D2_merged_D2)))
+# Use regularized negative binomial regression to normalize counts
+Sat_D1D2_merged <- SCTransform(Sat_D1D2_merged, verbose = FALSE)
+# Assign cell-cycle score
+Sat_D1D2_merged <- CellCycleScoring(Sat_D1D2_merged, s.features = cc.genes.updated.2019$s.genes, g2m.features = cc.genes.updated.2019$g2m.genes,
+                                    set.ident = TRUE)
+# Regress out the difference between the G2M and S phase scores
+Sat_D1D2_merged$cc_difference <- Sat_D1D2_merged$S.Score - Sat_D1D2_merged$G2M.Score
+Sat_D1D2_merged <- SCTransform(Sat_D1D2_merged, assay = 'RNA', new.assay.name = 'SCT', vars.to.regress = "cc_difference", verbose = FALSE)
+
+Sat_D1D2_merged <- RunPCA(Sat_D1D2_merged, features = VariableFeatures(Sat_D1D2_merged))
+Sat_D1D2_merged <- RunUMAP(Sat_D1D2_merged, dims = 1:15)
+DimPlot(Sat_D1D2_merged, group.by = "Phase") +
+  DimPlot(Sat_D1D2_merged, group.by = "dataset")
+
+## Add AD and CO cluster labels
+AD_clusters <- read.csv(here("output", "AD_clusters_res08.csv")) %>% 
+  pull(x, X)
+names(AD_clusters) <- sub("-1", "-2", names(AD_clusters))
+AD_clusters <- AD_clusters[names(AD_clusters) %in% AD_filtered_barcodes]
+
+
+CO_clusters <- read.csv(here("output", "CO_clusters_res08.csv")) %>% 
+  pull(x, X)
+
+Sat_D1D2_merged$CO_clusters <- CO_clusters
+Sat_D1D2_merged$AD_clusters <- AD_clusters
+
+```
+
+
+### UMAP embedding of the data without any integration method revealed segregation of cells based on datasets. We decided to apply the cluster similarity spectrum (CSS) method that achieves integration by representing each cell by its transcriptome's similarity to every cell cluster in each sample.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+Sat_D1D2_merged_batch_cor <- cluster_sim_spectrum(object = Sat_D1D2_merged, label_tag = "dataset",
+                                                  cluster_resolution = 0.8, verbose=FALSE)
+
+Sat_D1D2_merged_batch_cor <- RunUMAP(Sat_D1D2_merged_batch_cor, reduction = "css", dims = 1:ncol(Embeddings(Sat_D1D2_merged_batch_cor, "css")))
+Sat_D1D2_merged_batch_cor <- FindNeighbors(Sat_D1D2_merged_batch_cor, reduction = "css", dims = 1:ncol(Embeddings(Sat_D1D2_merged_batch_cor, "css")))
+Sat_D1D2_merged_batch_cor <- FindClusters(Sat_D1D2_merged_batch_cor, resolution = c(0.1, 0.4, 0.8), verbose = FALSE)
+
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = "SCT_snn_res.0.8", label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = "SCT_snn_res.0.4", label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = "SCT_snn_res.0.1", label = T) +
+  DimPlot(Sat_D1D2_merged_batch_cor, group.by = "dataset", label = T) 
+
+autumn_palette <- c("#751A33", "#B34233", "#D28F33", "#D4B95E", "#4EA2A2", "#506432",
+                    "#1A8693", "#cbdfbd", "#d4e09b", "#f6f4d2", "#f19c79", "#a44a3f")
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = "SCT_snn_res.0.4", label = F, cols = autumn_palette) +
+  theme_tufte() +
+  theme(axis.ticks = element_blank())
+
+```
+
+
+### We can better visualize differences between AD and CO by computing the imbalance score for each cell based on the condition label distribution of its neighbors compared to the overall distribution.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+
+imb_scores <- condiments::imbalance_score(Object = Sat_D1D2_merged_batch_cor@reductions$umap@cell.embeddings,
+                                          conditions = Sat_D1D2_merged_batch_cor$dataset)
+
+df_imb <- as.data.frame(Sat_D1D2_merged_batch_cor@reductions$umap@cell.embeddings)
+df_imb$scaled_imb <- imb_scores$scaled_scores
+
+ggplot(df_imb, aes(x = UMAP_1, y = UMAP_2, col = scaled_imb)) +
+  geom_point() +
+  scale_color_viridis_c(option = "C") +
+  labs(col = "Imbalance score") +
+  ggthemes::theme_tufte(ticks = F) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank())
+
+```
+
+
+### We test the difference between the proportion of cells in clusters between AD and CO.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+test_scProportionTest <- sc_utils(Sat_D1D2_merged_batch_cor)
+test_scProportionTest <- permutation_test(test_scProportionTest, 
+                                   cluster_identity = "SCT_snn_res.0.4", 
+                                   sample_1 = "D1",
+                                   sample_2 = "D2",
+                                   sample_identity = "dataset")
+
+permutation_plot(test_scProportionTest)
+
+```
+
+
+### Identification of specific genes for AD/CO
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+cond_spec_markers <- list()
+for (i in levels(Sat_D1D2_merged_batch_cor$SCT_snn_res.0.1)) {
+  tmp <- subset(Sat_D1D2_merged_batch_cor, SCT_snn_res.0.1 == i)
+  cond_spec_markers[[i]] <- SoupX::quickMarkers(tmp@assays$RNA@counts, tmp$dataset, N = 50)
+}
+
+for (i in names(cond_spec_markers)){
+  file_name <- paste("cond_spec_markers_cl", i, ".csv", sep = "")
+  write.csv(cond_spec_markers[[i]][,-c(1,5,7,8,9)],here("output", file_name), 
+            row.names = TRUE, quote = FALSE)
+  }
+
+SCE_D1D2_merged_batch_cor <- as.SingleCellExperiment(Sat_D1D2_merged_batch_cor)
+
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[["0"]] %>%
+              arrange(qval) %>%
+              pull(gene) %>%
+              head(),
+              x = "dataset")
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[["1"]] %>%
+              arrange(qval) %>%
+              pull(gene) %>%
+              head(),
+              x = "dataset")
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[["2"]] %>%
+              arrange(qval) %>%
+              pull(gene) %>%
+              head(),
+              x = "dataset")
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[["3"]] %>%
+              arrange(qval) %>%
+              pull(gene) %>%
+              head(),
+              x = "dataset")
+scater::plotExpression(SCE_D1D2_merged_batch_cor, features = cond_spec_markers[["4"]] %>%
+              arrange(qval) %>%
+              pull(gene) %>%
+              head(),
+              x = "dataset")
+
+genes_to_plot <- c("RAX", "CRX", "VSX2", "SIX6")
+for (i in genes_to_plot){
+  g <- Nebulosa::plot_density(Sat_D1D2_merged_batch_cor, features = i, reduction = "umap") +
+        theme_tufte() +
+        theme(legend.position="none", axis.ticks = element_blank())
+  print(g)
+  }
+
+```
+
+
+### We compare our datasets with published data (Kanton et al, 2019) using the SingleR package.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+orgFull_huma <- readRDS(here("data", "Kanton_2019", "timecourse_human_pseudocells_consensusGenome.rds"))
+DimPlot(orgFull_huma, reduction = "spring", group.by = "stage_group") 
+
+```
+
+
+### The cells in our datasets are from 2-month old organoids, therefore, we expect the most cells to be classified as "Organoid-2M" or younger
+
+```{r, echo=TRUE, warning=FALSE, message = FALSE, fig.width=16, fig.height=4}
+# Extract log-normalized counts and subset the matrix to genes detected in our dataset
+orgFull_huma_logCounts <- orgFull_huma@assays$RNA@data[rownames(orgFull_huma@assays$RNA@data) %in% rownames(Sat_D1D2_merged_batch_cor@assays$RNA@counts),]
+
+# Build a reference
+orgFull_human_stage_ref <- trainSingleR(orgFull_huma_logCounts, 
+                                labels = orgFull_huma$stage_group, 
+                                BPPARAM = MulticoreParam(), 
+                                de.n = 300,
+                                aggr.ref = TRUE)
+# Classify cells in our dataset
+D1D2_orgFull_human_stage_pred <- classifySingleR(Sat_D1D2_merged_batch_cor@assays$RNA@counts, orgFull_human_stage_ref, BPPARAM = MulticoreParam())
+
+#table(D1D2_orgFull_human_stage_pred$pruned.labels)
+Sat_D1D2_merged_batch_cor$orgFull_human_stage_pred <- as.factor(D1D2_orgFull_human_stage_pred$pruned.labels)
+DimPlot(Sat_D1D2_merged_batch_cor, group.by = "orgFull_human_stage_pred", label=F)
+
+Sat_D1D2_merged_batch_cor_D1 <- subset(Sat_D1D2_merged_batch_cor, dataset == "D1")
+Sat_D1D2_merged_batch_cor_D2 <- subset(Sat_D1D2_merged_batch_cor, dataset == "D2")
+
+DimPlot(Sat_D1D2_merged_batch_cor_D1, group.by = "orgFull_human_stage_pred", split.by = "orgFull_human_stage_pred", label=F) &
+  theme_tufte() &
+  theme(axis.ticks = element_blank())
+DimPlot(Sat_D1D2_merged_batch_cor_D2, group.by = "orgFull_human_stage_pred", split.by = "orgFull_human_stage_pred", label=F) &
+  theme_tufte() &
+  theme(axis.ticks = element_blank())
+
+```
+
+
+### Trajectory inference across conditions
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+DimPlot(Sat_D1D2_merged_batch_cor, label = F, group.by = "SCT_snn_res.0.1")
+
+clust <-  subset(Sat_D1D2_merged_batch_cor, SCT_snn_res.0.1 %in% c(0,1))
+# remove AD cluster 6 and CO cluster 8
+clust <-  subset(clust, AD_clusters %in% 6, invert=T)
+clust <-  subset(clust, CO_clusters %in% 8, invert=T)
+#
+clust$TTR_on <- clust@assays$RNA@counts["TTR",] > 2
+clust <- subset(clust, TTR_on == FALSE)
+
+rd <- clust@reductions$umap@cell.embeddings
+clust <- as.character(clust$SCT_snn_res.0.1)
+
+sds <- slingshot(rd, clust, start.clus="1",end.clus ="0", stretch=0, extend="n")
+
+#SlingshotDataSet(sds)
+#plot(rd[,1], rd[,2])
+#lines(SlingshotDataSet(sds))
+
+psts <- slingPseudotime(sds) 
+
+df_psts <- as.data.frame(rd)
+df_psts$psts <- psts
+
+ggplot(df_psts, aes(x = UMAP_1, y = UMAP_2, col = psts)) +
+  geom_point() +
+  ggthemes::theme_tufte(ticks = F) +
+  scale_color_viridis_c() +
+  labs(col="pseudotime")
+
+Sat_D1D2_merged_batch_cor_psts <- subset(Sat_D1D2_merged_batch_cor, cells = rownames(rd))
+df_psts$condition <- Sat_D1D2_merged_batch_cor_psts$dataset
+df_psts$condition[df_psts$condition == "D1"] <- "CO"
+df_psts$condition[df_psts$condition == "D2"] <- "AD"
+
+ggplot(df_psts, aes(x = psts, fill = condition)) +
+  geom_density(alpha = .5) +
+  scale_fill_brewer(type = "qual") +
+  theme(legend.position = "bottom") +
+  ggthemes::theme_tufte(ticks = F) +
+  labs(x="pseudotime")
+
+```
+
+### Trajectory inference across conditions: differential expression between conditions along pseudotime
+
+### For both datasets we will estimate a smooth average gene expression profile along pseudotime using a negative binomial generalized additive model (NB-GAM). Then we will identify genes differentially expressed between AD and CO within a trajectory.
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE, fig.height=10}
+
+counts_D1D2_merged <- as.matrix(Sat_D1D2_merged_batch_cor@assays$RNA@counts[VariableFeatures(Sat_D1D2_merged_batch_cor),rownames(df_psts)])
+
+df_psts$condition <- as.factor(df_psts$condition)
+
+# comp demanding, don't run again when generating the report
+BPPARAM <- BiocParallel::bpparam()
+BPPARAM$workers <- 30 # use n cores
+#set.seed(42)
+#aicK <- evaluateK(counts = counts_D1D2_merged, sds = sds, conditions = df_psts$condition,
+#                     parallel = TRUE, BPPARAM = BPPARAM)
+
+set.seed(42)
+sceGAM <- fitGAM(counts = counts_D1D2_merged, sds = sds, conditions = df_psts$condition,
+                  nknots = 7, parallel=TRUE, BPPARAM = BPPARAM, verbose = FALSE)
+
+
+# Identify DE genes between AD and CO
+cond_res <- conditionTest(sceGAM, l2fc = log2(2))
+cond_res$padj <- p.adjust(cond_res$pvalue, "fdr")
+sum(cond_res$padj <= 0.01, na.rm = TRUE)
+
+# export
+cond_res %>%
+  filter(padj <= 0.1) %>%
+  arrange(padj) %>%
+  write.csv(here("output","COvsAD_DE_dyn_genes.csv"))
+
+condition_genes <- cond_res %>%
+                    filter(padj <= 0.01) %>%
+                    arrange(padj) %>%
+                    rownames()
+### based on mean smoother
+yhat_smooth <- predictSmooth(sceGAM, gene = condition_genes, nPoints = 50, tidy = FALSE)
+yhat_smooth_scaled <- t(scale(t(yhat_smooth)))
+
+heat_smooth_CO <- pheatmap(yhat_smooth_scaled[,51:100],
+  cluster_cols = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "CO", legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+matching_heatmap_AD <- pheatmap(yhat_smooth_scaled[heat_smooth_CO$tree_row$order, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "AD",
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+#heat_smooth_CO$tree_row$labels[heat_smooth_CO$tree_row$order]
+```
+
+### Heatmaps of DE genes between AD and CO within a trajectory
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE, fig.height=10}
+gridExtra::grid.arrange(heat_smooth_CO[[4]], matching_heatmap_AD[[4]], ncol = 2)
+```
+
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+dyn_genes <- read.delim(here("data","selection_dyn_genes.txt"))
+
+heat_smooth_CO <- pheatmap(yhat_smooth_scaled[dyn_genes$WT,51:100],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "CO", legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+matching_heatmap_AD <- pheatmap(yhat_smooth_scaled[dyn_genes$WT, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "AD",
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+gridExtra::grid.arrange(heat_smooth_CO[[4]], matching_heatmap_AD[[4]], ncol = 2)
+```
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+
+heat_smooth_AD <- pheatmap(yhat_smooth_scaled[dyn_genes$AD, 1:50],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "AD",
+  legend = FALSE, silent = TRUE, fontsize = 6, border_color = NA
+)
+
+matching_heatmap_CO <- pheatmap(yhat_smooth_scaled[dyn_genes$AD,51:100],
+  cluster_cols = FALSE, cluster_rows = FALSE,
+  show_rownames = TRUE, show_colnames = FALSE, main = "CO", legend = FALSE,
+  silent = TRUE, fontsize = 6, treeheight_row=0, border_color = NA
+)
+
+gridExtra::grid.arrange(heat_smooth_AD[[4]], matching_heatmap_CO[[4]], ncol = 2)
+```
+
+
+
+```{r, echo=TRUE, warning=FALSE,message = FALSE}
+
+genes_to_plot <- c("HES5", "HES4", "HES1", "NOTCH1")
+
+Sat_D1D2_merged_batch_cor$dataset_SCT_snn_res.0.4 <- paste(Sat_D1D2_merged_batch_cor$SCT_snn_res.0.4, Sat_D1D2_merged_batch_cor$dataset, sep = "_")
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = "dataset_SCT_snn_res.0.4") +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F)
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = "dataset_SCT_snn_res.0.4") +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme( axis.text.x = element_text(angle = 90),
+        legend.position="none")
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = "dataset_SCT_snn_res.0.4") +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme( axis.text.x = element_text(angle = 90),
+        legend.key.size = unit(0.2, 'cm'), #change legend key size
+        legend.key.height = unit(0.2, 'cm'), #change legend key height
+        legend.key.width = unit(0.2, 'cm'), #change legend key width
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8))
+
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = "dataset") +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position="none")
+
+DotPlot(Sat_D1D2_merged_batch_cor, features = genes_to_plot, group.by = "dataset") +
+  scale_color_viridis_c() +
+  theme_tufte(ticks = F) +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90),
+         legend.key.size = unit(0.2, 'cm'), #change legend key size
+        legend.key.height = unit(0.2, 'cm'), #change legend key height
+        legend.key.width = unit(0.2, 'cm'), #change legend key width
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8))
+```
