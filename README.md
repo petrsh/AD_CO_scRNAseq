@@ -4,4 +4,4 @@ This repository contains scripts to reproduce analyses of our paper [“Cerebral
 
 The reproducible R Markdown analyses were created with [workflowr](https://github.com/workflowr/workflowr). 
 
-Link to the analyses: [petrsh.github.io/AD_CO_scRNAseq/](petrsh.github.io/AD_CO_scRNAseq/)
+Link to the analyses: petrsh.github.io/AD_CO_scRNAseq/
